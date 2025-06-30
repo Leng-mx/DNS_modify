@@ -1,0 +1,8 @@
+com\bupt\dnsrelay\network\UDPServer$DNSPacket.class
+com\bupt\dnsrelay\DNSRelayServer.class
+com\bupt\dnsrelay\dns\DNSMessage.class
+com\bupt\dnsrelay\dns\DNSQuestion.class
+com\bupt\dnsrelay\network\UDPServer.class
+com\bupt\dnsrelay\config\ConfigParser.class
+com\bupt\dnsrelay\dns\DNSRecord.class
+com\bupt\dnsrelay\dns\DNSParser.class

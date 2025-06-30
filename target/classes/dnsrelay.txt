@@ -1,0 +1,36 @@
+# DNS中继服务器配置文件
+# 格式：IP地址 域名
+# 
+# 说明：
+# - 如果IP地址为0.0.0.0，则表示拦截该域名（返回NXDOMAIN）
+# - 如果IP地址为有效IP，则进行本地解析
+# - 不在此文件中的域名将转发给上游DNS服务器
+#
+# 示例配置：
+
+# 拦截的域名（广告、恶意网站等）
+0.0.0.0 blocked.example.com
+0.0.0.0 ads.example.com
+0.0.0.0 malware.example.com
+0.0.0.0 spam.example.com
+
+# 本地解析的域名
+192.168.1.100 local.example.com
+192.168.1.101 server.local
+192.168.1.102 printer.local
+10.0.0.1 router.local
+
+# 常用网站的本地缓存（可选）
+# 注意：这些IP地址仅为示例，实际使用时应配置正确的IP
+# 220.181.38.148 www.baidu.com
+# 157.240.8.35 www.facebook.com
+# 172.217.160.110 www.google.com
+
+# 内网服务器
+192.168.1.10 mail.company.com
+192.168.1.20 web.company.com
+192.168.1.30 ftp.company.com
+
+# 测试域名
+127.0.0.1 test.local
+127.0.0.1 localhost.test
