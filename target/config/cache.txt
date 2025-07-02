@@ -11,3 +11,7 @@
 52.183.220.149 settings-win.data.microsoft.com
 23.202.35.138 www.msftconnecttest.com
 23.55.179.16 ipv6.msftconnecttest.com
+111.115.116.0 1.0.0.127.in-addr.arpa
+20.119.0.23 cosmos-customer-webservice.azurewebsites.net
+23.204.80.230 www.msftncsi.com
+23.55.179.23 ipv6.msftncsi.com
