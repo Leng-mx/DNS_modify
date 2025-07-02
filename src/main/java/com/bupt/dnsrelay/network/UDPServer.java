@@ -19,7 +19,7 @@ public class UDPServer {
     
     private DatagramSocket serverSocket;
     private boolean isRunning;
-    private int debugLevel;
+    private final int debugLevel;
     
     /**
      * 构造函数
