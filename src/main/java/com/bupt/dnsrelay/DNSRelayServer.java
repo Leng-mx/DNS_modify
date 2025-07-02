@@ -4,22 +4,23 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import com.bupt.dnsrelay.config.ConfigParser;
+import com.bupt.dnsrelay.dns.DNSMessage;
+import com.bupt.dnsrelay.dns.DNSParser;
 import com.bupt.dnsrelay.network.UDPServer;
 
 /**
  * DNS中继服务器主程序
- * BUPT-QMUL网络通信课程项目
  */
 public class DNSRelayServer {
     
     private static final String DEFAULT_UPSTREAM_DNS = "10.3.9.4";
     private static final String DEFAULT_CONFIG_FILE = "config\\dnsrelay.txt";
     
+    private ConfigParser configParser = new ConfigParser();
     private UDPServer udpServer;
-    private ConfigParser configParser;
     private String upstreamDNS;
     private int debugLevel;
-    private volatile boolean isRunning;
+    private volatile boolean isRunning = false;
     
     /**
      * 构造函数
@@ -30,16 +31,10 @@ public class DNSRelayServer {
     public DNSRelayServer(String upstreamDNS, String configFile, int debugLevel) {
         this.upstreamDNS = upstreamDNS;
         this.debugLevel = debugLevel;
-        this.configParser = new ConfigParser();
         this.udpServer = new UDPServer(debugLevel);
-        this.isRunning = false;
-        
-        // 加载配置文件
         try {
             configParser.loadConfig(configFile);
-            if (debugLevel >= 1) {
-                configParser.printConfig();
-            }
+            if (debugLevel >= 1) configParser.printConfig();
         } catch (IOException e) {
             System.err.println("Error loading configuration: " + e.getMessage());
             System.exit(1);
@@ -51,22 +46,14 @@ public class DNSRelayServer {
      */
     public void start() {
         try {
-            // 启动UDP服务器
             udpServer.start();
             isRunning = true;
-            
-            System.out.println("DNS Relay Server started successfully");
-            System.out.println("Debug level: " + debugLevel);
-            System.out.println("Upstream DNS: " + upstreamDNS);
-            System.out.println("Configuration entries: " + configParser.getEntryCount());
-            System.out.println("Waiting for DNS queries...\n");
-            
-            // 设置关闭钩子
+            System.out.println("DNS Relay Server started successfully\nDebug level: " + debugLevel +
+                "\nUpstream DNS: " + upstreamDNS +
+                "\nConfiguration entries: " + configParser.getEntryCount() +
+                "\nWaiting for DNS queries...\n");
             Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
-            
-            // 主服务循环
             runServerLoop();
-            
         } catch (IOException e) {
             System.err.println("Failed to start DNS Relay Server: " + e.getMessage());
             System.exit(1);
@@ -78,8 +65,8 @@ public class DNSRelayServer {
      */
     public void stop() {
         if (isRunning) {
-            isRunning = false;
             udpServer.stop();
+            isRunning = false;
             System.out.println("DNS Relay Server stopped");
         }
     }
@@ -90,41 +77,21 @@ public class DNSRelayServer {
     private void runServerLoop() {
         while (isRunning) {
             try {
-                // 接收DNS查询
                 UDPServer.DNSPacket packet = udpServer.receiveQuery();
-                if (packet == null) {
-                    continue; // 超时，继续等待
-                }
-                
-                if (debugLevel >= 1) {
-                    System.out.printf("\n--- Received DNS Query from %s ---\n", 
-                        packet.getClientInfo());
-                }
-                
-                // 处理DNS查询
+                if (packet == null) continue;
+                if (debugLevel >= 1)
+                    System.out.printf("\n--- Received DNS Query from %s ---\n", packet.getClientInfo());
                 byte[] responseData = handleDNSQuery(packet.getData());
-                
                 if (responseData != null) {
-                    // 发送响应
-                    udpServer.sendResponse(responseData, 
-                        packet.getClientAddress(), packet.getClientPort());
-                    
-                    if (debugLevel >= 1) {
-                        System.out.printf("Response sent to client (%d bytes)\n", 
-                            responseData.length);
-                    }
+                    udpServer.sendResponse(responseData, packet.getClientAddress(), packet.getClientPort());
+                    if (debugLevel >= 1)
+                        System.out.printf("Response sent to client (%d bytes)\n", responseData.length);
                 } else {
                     System.err.println("Error: Failed to generate response");
                 }
-                
-                if (debugLevel >= 1) {
-                    System.out.println("----------------------------------------\n");
-                }
-                
+                if (debugLevel >= 1) System.out.println("----------------------------------------\n");
             } catch (IOException e) {
-                if (isRunning) {
-                    System.err.println("Error in server loop: " + e.getMessage());
-                }
+                if (isRunning) System.err.println("Error in server loop: " + e.getMessage());
             }
         }
     }
@@ -145,6 +112,15 @@ public class DNSRelayServer {
             
             if (debugLevel >= 1) {
                 System.out.println("Query domain: " + domain);
+            }
+            
+            if (debugLevel >= 2) {
+                try {
+                    DNSMessage msg = DNSParser.parseMessage(queryData);
+                    DNSParser.printMessage(msg, debugLevel);
+                } catch (Exception e) {
+                    System.err.println("Failed to parse and print DNS query: " + e.getMessage());
+                }
             }
             
             // 情况一：检查域名是否被拦截
@@ -245,6 +221,15 @@ public class DNSRelayServer {
         response[10] = 0;
         response[11] = 0;
         
+        if (debugLevel >= 2) {
+            try {
+                DNSMessage msg = DNSParser.parseMessage(response);
+                DNSParser.printMessage(msg, debugLevel);
+            } catch (Exception e) {
+                System.err.println("Failed to parse and print error response: " + e.getMessage());
+            }
+        }
+        
         return response;
     }
     
@@ -298,6 +283,7 @@ public class DNSRelayServer {
                 response[pos++] = (byte) Integer.parseInt(part);
             }
             
+
             return Arrays.copyOf(response, pos);
             
         } catch (Exception e) {
