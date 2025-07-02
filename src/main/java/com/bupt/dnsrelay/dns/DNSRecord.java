@@ -15,6 +15,7 @@ public class DNSRecord {
     public static final int TYPE_CNAME = 5;  // 别名记录
     public static final int TYPE_PTR = 12;   // 指针记录
     public static final int TYPE_MX = 15;    // 邮件交换记录
+    public static final int TYPE_AAAA = 28;    // IPv6地址记录
     
     // DNS类别常量
     public static final int CLASS_IN = 1;    // Internet类别
@@ -78,6 +79,23 @@ public class DNSRecord {
         return null;
     }
     
+    /**
+     * 获取AAAA记录的IPv6地址字符串
+     * @return IPv6地址字符串，如果不是AAAA记录则返回null
+     */
+    public String getIPv6Address() {
+        if (type == TYPE_AAAA && rdata != null && rdata.length == 16) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 16; i += 2) {
+                int part = ((rdata[i] & 0xFF) << 8) | (rdata[i + 1] & 0xFF);
+                sb.append(Integer.toHexString(part));
+                if (i < 14) sb.append(":");
+            }
+            return sb.toString();
+        }
+        return null;
+    }
+    
     // Getter和Setter方法
     public String getName() {
         return name;
@@ -129,6 +147,7 @@ public class DNSRecord {
     public String getTypeString() {
         switch (type) {
             case TYPE_A: return "A";
+            case TYPE_AAAA: return "AAAA";
             case TYPE_NS: return "NS";
             case TYPE_CNAME: return "CNAME";
             case TYPE_PTR: return "PTR";
@@ -146,6 +165,8 @@ public class DNSRecord {
         
         if (type == TYPE_A) {
             sb.append(getIPAddress());
+        } else if (type == TYPE_AAAA) {
+            sb.append(getIPv6Address());
         } else {
             sb.append("[").append(getRdataLength()).append(" bytes]");
         }

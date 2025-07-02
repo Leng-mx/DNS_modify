@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.bupt.dnsrelay.IntegrationTest" time="0.016" tests="6" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.bupt.dnsrelay.IntegrationTest" time="0.017" tests="6" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="24"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="CN"/>
     <property name="sun.boot.library.path" value="D:\APP\App_code\Java\jdk-24\bin"/>
-    <property name="sun.java.command" value="C:\Users\Xuan\AppData\Local\Temp\surefire735376107592753444\surefirebooter-20250702215014855_3.jar C:\Users\Xuan\AppData\Local\Temp\surefire735376107592753444 2025-07-02T21-50-14_692-jvmRun1 surefire-20250702215014855_1tmp surefire_0-20250702215014855_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\Xuan\AppData\Local\Temp\surefire9163773086833498826\surefirebooter-20250702222423857_3.jar C:\Users\Xuan\AppData\Local\Temp\surefire9163773086833498826 2025-07-02T22-24-23_641-jvmRun1 surefire-20250702222423857_1tmp surefire_0-20250702222423857_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="F:\Desk top\DNS_modify\target\test-classes;F:\Desk top\DNS_modify\target\classes;D:\APP\App_code\Java\Apache\MAVEN—local repository\junit\junit\4.13.2\junit-4.13.2.jar;D:\APP\App_code\Java\Apache\MAVEN—local repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;D:\APP\App_code\Java\Apache\MAVEN—local repository\org\slf4j\slf4j-api\1.7.36\slf4j-api-1.7.36.jar;D:\APP\App_code\Java\Apache\MAVEN—local repository\org\slf4j\slf4j-simple\1.7.36\slf4j-simple-1.7.36.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\Xuan\AppData\Local\Temp\surefire735376107592753444\surefirebooter-20250702215014855_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\Xuan\AppData\Local\Temp\surefire9163773086833498826\surefirebooter-20250702222423857_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="24.0.1+9-30"/>
@@ -59,7 +59,7 @@
     <property name="java.class.version" value="68.0"/>
   </properties>
   <testcase name="testLocalResolutionWorkflow" classname="com.bupt.dnsrelay.IntegrationTest" time="0.003">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config4926178780247380414.txt
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config9302512240259440990.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: ads.malware.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
@@ -68,8 +68,8 @@ Loaded: server.internal.com -> 10.0.0.1
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testRelayForwardingWorkflow" classname="com.bupt.dnsrelay.IntegrationTest" time="0.003">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config5639369899394158471.txt
+  <testcase name="testRelayForwardingWorkflow" classname="com.bupt.dnsrelay.IntegrationTest" time="0.002">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config17104838685086416721.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: ads.malware.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
@@ -78,8 +78,8 @@ Loaded: server.internal.com -> 10.0.0.1
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testDNSMessageAndRecordIntegration" classname="com.bupt.dnsrelay.IntegrationTest" time="0.002">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config9904377927443889664.txt
+  <testcase name="testDNSMessageAndRecordIntegration" classname="com.bupt.dnsrelay.IntegrationTest" time="0.003">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config4289206167837948155.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: ads.malware.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
@@ -88,8 +88,8 @@ Loaded: server.internal.com -> 10.0.0.1
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testCaseInsensitiveIntegration" classname="com.bupt.dnsrelay.IntegrationTest" time="0.002">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config11338348480197652350.txt
+  <testcase name="testCaseInsensitiveIntegration" classname="com.bupt.dnsrelay.IntegrationTest" time="0.003">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config16353297495135608798.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: ads.malware.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
@@ -98,8 +98,8 @@ Loaded: server.internal.com -> 10.0.0.1
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testMultipleDomainTypes" classname="com.bupt.dnsrelay.IntegrationTest" time="0.003">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config10374687980513195278.txt
+  <testcase name="testMultipleDomainTypes" classname="com.bupt.dnsrelay.IntegrationTest" time="0.004">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config8528911835318444474.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: ads.malware.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
@@ -109,7 +109,7 @@ Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
   <testcase name="testDomainBlockingWorkflow" classname="com.bupt.dnsrelay.IntegrationTest" time="0.002">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config13703382325352773782.txt
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\integration_test_config16881734892419966600.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: ads.malware.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100

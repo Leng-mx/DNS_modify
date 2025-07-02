@@ -22,9 +22,9 @@
 
 # 常用网站的本地缓存（可选）
 # 注意：这些IP地址仅为示例，实际使用时应配置正确的IP
-220.181.38.148 www.baidu.com
-157.240.8.35 www.facebook.com
-172.217.160.110 www.google.com
+# 220.181.38.148 www.baidu.com
+# 157.240.8.35 www.facebook.com
+# 172.217.160.110 www.google.com
 
 # 内网服务器
 192.168.1.10 mail.company.com

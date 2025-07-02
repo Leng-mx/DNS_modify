@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="CN"/>
     <property name="sun.boot.library.path" value="D:\APP\App_code\Java\jdk-24\bin"/>
-    <property name="sun.java.command" value="C:\Users\Xuan\AppData\Local\Temp\surefire735376107592753444\surefirebooter-20250702215014855_3.jar C:\Users\Xuan\AppData\Local\Temp\surefire735376107592753444 2025-07-02T21-50-14_692-jvmRun1 surefire-20250702215014855_1tmp surefire_0-20250702215014855_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\Xuan\AppData\Local\Temp\surefire9163773086833498826\surefirebooter-20250702222423857_3.jar C:\Users\Xuan\AppData\Local\Temp\surefire9163773086833498826 2025-07-02T22-24-23_641-jvmRun1 surefire-20250702222423857_1tmp surefire_0-20250702222423857_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="F:\Desk top\DNS_modify\target\test-classes;F:\Desk top\DNS_modify\target\classes;D:\APP\App_code\Java\Apache\MAVEN—local repository\junit\junit\4.13.2\junit-4.13.2.jar;D:\APP\App_code\Java\Apache\MAVEN—local repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;D:\APP\App_code\Java\Apache\MAVEN—local repository\org\slf4j\slf4j-api\1.7.36\slf4j-api-1.7.36.jar;D:\APP\App_code\Java\Apache\MAVEN—local repository\org\slf4j\slf4j-simple\1.7.36\slf4j-simple-1.7.36.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\Xuan\AppData\Local\Temp\surefire735376107592753444\surefirebooter-20250702215014855_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\Xuan\AppData\Local\Temp\surefire9163773086833498826\surefirebooter-20250702222423857_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="24.0.1+9-30"/>
@@ -58,8 +58,8 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="68.0"/>
   </properties>
-  <testcase name="testLoadConfig" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.046">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config8563112205342697134.txt
+  <testcase name="testLoadConfig" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.054">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config12833229032416374636.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -73,7 +73,7 @@ Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
   <testcase name="testDomainBlocking" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.002">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config7912234925713418906.txt
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config4168742652031933092.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -82,8 +82,8 @@ Loaded: ads.example.com -> 0.0.0.0 (BLOCKED)
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testLocalResolution" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.004">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config16920795465772862377.txt
+  <testcase name="testLocalResolution" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.003">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config6312506546231380642.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -93,7 +93,7 @@ Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
   <testcase name="testCaseInsensitive" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.002">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config1791711538361841311.txt
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config2698460569249098453.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -102,8 +102,8 @@ Loaded: ads.example.com -> 0.0.0.0 (BLOCKED)
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testGetAllDomains" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.004">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config10338575913741843321.txt
+  <testcase name="testGetAllDomains" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.002">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config11896887015434755573.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -112,8 +112,8 @@ Loaded: ads.example.com -> 0.0.0.0 (BLOCKED)
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testIsLocalDomain" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.003">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config14770123447186085639.txt
+  <testcase name="testIsLocalDomain" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.002">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config3604710914827213351.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -122,8 +122,8 @@ Loaded: ads.example.com -> 0.0.0.0 (BLOCKED)
 Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testGetBlockedDomains" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.004">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config593991912368070310.txt
+  <testcase name="testGetBlockedDomains" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.003">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\test_dns_config16847068613685832893.txt
 Loaded: blocked.test.com -> 0.0.0.0 (BLOCKED)
 Loaded: local.test.com -> 192.168.1.100
 Loaded: localhost.test.com -> 127.0.0.1
@@ -133,7 +133,7 @@ Loaded 5 domain entries from configuration file
 ]]></system-out>
   </testcase>
   <testcase name="testInvalidConfigLines" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.005">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\invalid_config14801282467770258156.txt
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\invalid_config11537043518399339419.txt
 Loaded: valid.test.com -> 192.168.1.100
 Warning: Invalid IP address at line 2: invalid_ip
 Warning: Invalid line format at line 3: 192.168.1.101
@@ -141,8 +141,8 @@ Loaded: valid2.test.com -> 192.168.1.102
 Loaded 2 domain entries from configuration file
 ]]></system-out>
   </testcase>
-  <testcase name="testEmptyConfigFile" classname="com.bupt.dnsrelay.ConfigParserTest" time="0.001">
-    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\empty_config9163304044405490792.txt
+  <testcase name="testEmptyConfigFile" classname="com.bupt.dnsrelay.ConfigParserTest" time="0">
+    <system-out><![CDATA[Loading DNS configuration from: C:\Users\Xuan\AppData\Local\Temp\empty_config1798993772697650152.txt
 Loaded 0 domain entries from configuration file
 ]]></system-out>
   </testcase>

@@ -114,8 +114,9 @@ public class DNSRelayServer {
                 System.err.println("Error: Failed to extract domain from query");
                 return null;
             }
+            int queryType = getQueryType(queryData);
             if (debugLevel >= 1) {
-                System.out.println("Query domain: " + domain);
+                System.out.println("Query domain: " + domain + ", type: " + (queryType == DNSRecord.TYPE_A ? "A" : (queryType == DNSRecord.TYPE_AAAA ? "AAAA" : queryType)));
             }
             if (debugLevel >= 2) {
                 try {
@@ -130,29 +131,35 @@ public class DNSRelayServer {
                 System.out.printf("[BLOCKED] %s -> NXDOMAIN\n", domain);
                 return createErrorResponse(queryData, 3); // NXDOMAIN
             }
-            // 2. 检查本地解析
-            String localIP = configParser.lookupDomain(domain);
-            if (localIP != null && !"0.0.0.0".equals(localIP)) {
-                System.out.printf("[LOCAL] %s -> %s\n", domain, localIP);
-                return createLocalResponse(queryData, localIP);
+            // 2. 检查本地解析（仅A记录）
+            if (queryType == DNSRecord.TYPE_A) {
+                String localIP = configParser.lookupDomain(domain);
+                if (localIP != null && !"0.0.0.0".equals(localIP)) {
+                    System.out.printf("[LOCAL] %s -> %s\n", domain, localIP);
+                    return createLocalResponse(queryData, localIP);
+                }
             }
             // 3. 检查缓存
-            String cacheIP = cacheManager.lookup(domain);
+            String cacheIP = cacheManager.lookup(domain + ":" + queryType);
             if (cacheIP != null) {
                 System.out.printf("[CACHE] %s -> %s\n", domain, cacheIP);
-                return createLocalResponse(queryData, cacheIP);
+                if (queryType == DNSRecord.TYPE_A) {
+                    return createLocalResponse(queryData, cacheIP);
+                } else if (queryType == DNSRecord.TYPE_AAAA) {
+                    // 这里只返回原始响应，或可自定义IPv6响应
+                    // 暂时直接转发上游响应
+                }
             }
             // 4. 转发到上游DNS服务器
             System.out.printf("[UPSTREAM] %s -> querying upstream DNS\n", domain);
             byte[] upstreamResponse = udpServer.forwardQuery(queryData, upstreamDNS);
             if (upstreamResponse != null) {
-                // 解析上游响应，提取IP并写入缓存
-                String upstreamIP = extractIPFromResponse(upstreamResponse);
+                String upstreamIP = extractIPFromResponse(upstreamResponse, queryType);
                 if (upstreamIP != null) {
-                    cacheManager.put(domain, upstreamIP);
+                    cacheManager.put(domain + ":" + queryType, upstreamIP);
                     System.out.printf("[UPSTREAM] %s -> %s (cached)\n", domain, upstreamIP);
                 } else {
-                    System.out.printf("[UPSTREAM] %s -> response received, but no A record found\n", domain);
+                    System.out.printf("[UPSTREAM] %s -> response received, but no valid record found\n", domain);
                 }
                 return upstreamResponse;
             } else {
@@ -306,36 +313,44 @@ public class DNSRelayServer {
     }
 
     // 新增：从DNS响应中提取A记录IP
-    private String extractIPFromResponse(byte[] response) {
+    private String extractIPFromResponse(byte[] response, int queryType) {
         try {
             DNSMessage msg = DNSParser.parseMessage(response);
             if (msg.getAnswers() != null) {
                 for (DNSRecord rec : msg.getAnswers()) {
-                    if (rec.getType() == DNSRecord.TYPE_A && rec.getRdata() != null && rec.getRdata().length == 4) {
+                    if (queryType == DNSRecord.TYPE_A && rec.getType() == DNSRecord.TYPE_A && rec.getRdata() != null && rec.getRdata().length == 4) {
                         byte[] rdata = rec.getRdata();
                         int b1 = rdata[0] & 0xFF;
                         int b2 = rdata[1] & 0xFF;
                         int b3 = rdata[2] & 0xFF;
                         int b4 = rdata[3] & 0xFF;
                         return b1 + "." + b2 + "." + b3 + "." + b4;
+                    } else if (queryType == DNSRecord.TYPE_AAAA && rec.getType() == DNSRecord.TYPE_AAAA && rec.getRdata() != null && rec.getRdata().length == 16) {
+                        return rec.getIPv6Address();
                     }
                 }
             }
         } catch (Exception e) {
-            // 兼容：直接从响应包末尾尝试提取A记录IP
-            if (response.length > 16) {
+            // 兼容A记录：直接从响应包末尾尝试提取IPv4
+            if (queryType == DNSRecord.TYPE_A && response.length > 16) {
                 int ipStart = response.length - 4;
                 int b1 = response[ipStart] & 0xFF;
                 int b2 = response[ipStart + 1] & 0xFF;
                 int b3 = response[ipStart + 2] & 0xFF;
                 int b4 = response[ipStart + 3] & 0xFF;
-                // 简单校验
                 if (b1 > 0 && b1 < 255) {
                     return b1 + "." + b2 + "." + b3 + "." + b4;
                 }
             }
         }
         return null;
+    }
+
+    // 新增：从DNS查询包中提取查询类型
+    private int getQueryType(byte[] queryData) {
+        if (queryData.length < 14) return DNSRecord.TYPE_A;
+        int qtype = ((queryData[queryData.length - 4] & 0xFF) << 8) | (queryData[queryData.length - 3] & 0xFF);
+        return qtype;
     }
 
     /**
