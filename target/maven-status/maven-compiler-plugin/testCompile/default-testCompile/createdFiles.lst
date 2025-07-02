@@ -1,0 +1,4 @@
+com\bupt\dnsrelay\DNSRecordTest.class
+com\bupt\dnsrelay\IntegrationTest.class
+com\bupt\dnsrelay\DNSMessageTest.class
+com\bupt\dnsrelay\ConfigParserTest.class

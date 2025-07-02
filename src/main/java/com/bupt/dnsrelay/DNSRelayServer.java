@@ -13,7 +13,7 @@ import com.bupt.dnsrelay.network.UDPServer;
 public class DNSRelayServer {
     
     private static final String DEFAULT_UPSTREAM_DNS = "10.3.9.4";
-    private static final String DEFAULT_CONFIG_FILE = "src\\main\\resources\\dnsrelay.txt";
+    private static final String DEFAULT_CONFIG_FILE = "config\\dnsrelay.txt";
     
     private UDPServer udpServer;
     private ConfigParser configParser;
