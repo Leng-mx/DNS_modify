@@ -1,7 +1,11 @@
 package com.bupt.dnsrelay.network;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.BindException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 /**
  * UDP服务器类
