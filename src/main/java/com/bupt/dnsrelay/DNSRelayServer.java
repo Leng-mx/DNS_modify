@@ -3,9 +3,11 @@ package com.bupt.dnsrelay;
 import java.io.IOException;
 import java.util.Arrays;
 
+import com.bupt.dnsrelay.config.CacheManager;
 import com.bupt.dnsrelay.config.ConfigParser;
 import com.bupt.dnsrelay.dns.DNSMessage;
 import com.bupt.dnsrelay.dns.DNSParser;
+import com.bupt.dnsrelay.dns.DNSRecord;
 import com.bupt.dnsrelay.network.UDPServer;
 
 /**
@@ -21,6 +23,7 @@ public class DNSRelayServer {
     private String upstreamDNS;
     private int debugLevel;
     private volatile boolean isRunning = false;
+    private CacheManager cacheManager;
     
     /**
      * 构造函数
@@ -35,6 +38,9 @@ public class DNSRelayServer {
         try {
             configParser.loadConfig(configFile);
             if (debugLevel >= 1) configParser.printConfig();
+            // 初始化CacheManager
+            this.cacheManager = new CacheManager("config/cache.txt");
+            if (debugLevel >= 1) System.out.println("[CACHE] Loaded " + cacheManager.size() + " entries from cache.txt");
         } catch (IOException e) {
             System.err.println("Error loading configuration: " + e.getMessage());
             System.exit(1);
@@ -103,17 +109,14 @@ public class DNSRelayServer {
      */
     private byte[] handleDNSQuery(byte[] queryData) {
         try {
-            // 解析DNS查询（简化版本，直接处理字节数组）
             String domain = extractDomainFromQuery(queryData);
             if (domain == null) {
                 System.err.println("Error: Failed to extract domain from query");
                 return null;
             }
-            
             if (debugLevel >= 1) {
                 System.out.println("Query domain: " + domain);
             }
-            
             if (debugLevel >= 2) {
                 try {
                     DNSMessage msg = DNSParser.parseMessage(queryData);
@@ -122,30 +125,40 @@ public class DNSRelayServer {
                     System.err.println("Failed to parse and print DNS query: " + e.getMessage());
                 }
             }
-            
-            // 情况一：检查域名是否被拦截
+            // 1. 检查域名是否被拦截
             if (configParser.isDomainBlocked(domain)) {
-                System.out.println("BLOCKED: " + domain + " -> returning NXDOMAIN");
+                System.out.printf("[BLOCKED] %s -> NXDOMAIN\n", domain);
                 return createErrorResponse(queryData, 3); // NXDOMAIN
             }
-            
-            // 情况二：检查本地解析
+            // 2. 检查本地解析
             String localIP = configParser.lookupDomain(domain);
             if (localIP != null && !"0.0.0.0".equals(localIP)) {
-                System.out.println("LOCAL: " + domain + " -> " + localIP);
+                System.out.printf("[LOCAL] %s -> %s\n", domain, localIP);
                 return createLocalResponse(queryData, localIP);
             }
-            
-            // 情况三：转发到上游DNS服务器
-            System.out.println("FORWARD: " + domain + " -> querying upstream DNS");
-            byte[] upstreamResponse = udpServer.forwardQuery(queryData, upstreamDNS);
-            
-            if (upstreamResponse != null && debugLevel >= 1) {
-                System.out.println("Received response from upstream DNS");
+            // 3. 检查缓存
+            String cacheIP = cacheManager.lookup(domain);
+            if (cacheIP != null) {
+                System.out.printf("[CACHE] %s -> %s\n", domain, cacheIP);
+                return createLocalResponse(queryData, cacheIP);
             }
-            
-            return upstreamResponse;
-            
+            // 4. 转发到上游DNS服务器
+            System.out.printf("[UPSTREAM] %s -> querying upstream DNS\n", domain);
+            byte[] upstreamResponse = udpServer.forwardQuery(queryData, upstreamDNS);
+            if (upstreamResponse != null) {
+                // 解析上游响应，提取IP并写入缓存
+                String upstreamIP = extractIPFromResponse(upstreamResponse);
+                if (upstreamIP != null) {
+                    cacheManager.put(domain, upstreamIP);
+                    System.out.printf("[UPSTREAM] %s -> %s (cached)\n", domain, upstreamIP);
+                } else {
+                    System.out.printf("[UPSTREAM] %s -> response received, but no A record found\n", domain);
+                }
+                return upstreamResponse;
+            } else {
+                System.out.printf("[UPSTREAM] %s -> query failed\n", domain);
+                return createErrorResponse(queryData, 2); // SERVFAIL
+            }
         } catch (Exception e) {
             System.err.println("Error handling DNS query: " + e.getMessage());
             return null;
@@ -153,7 +166,7 @@ public class DNSRelayServer {
     }
     
     /**
-     * 从DNS查询中提取域名（简化实现）
+     * 从DNS查询中提取域名
      * @param queryData 查询数据
      * @return 域名字符串
      */
@@ -290,6 +303,39 @@ public class DNSRelayServer {
             System.err.println("Error creating local response: " + e.getMessage());
             return null;
         }
+    }
+
+    // 新增：从DNS响应中提取A记录IP
+    private String extractIPFromResponse(byte[] response) {
+        try {
+            DNSMessage msg = DNSParser.parseMessage(response);
+            if (msg.getAnswers() != null) {
+                for (DNSRecord rec : msg.getAnswers()) {
+                    if (rec.getType() == DNSRecord.TYPE_A && rec.getRdata() != null && rec.getRdata().length == 4) {
+                        byte[] rdata = rec.getRdata();
+                        int b1 = rdata[0] & 0xFF;
+                        int b2 = rdata[1] & 0xFF;
+                        int b3 = rdata[2] & 0xFF;
+                        int b4 = rdata[3] & 0xFF;
+                        return b1 + "." + b2 + "." + b3 + "." + b4;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // 兼容：直接从响应包末尾尝试提取A记录IP
+            if (response.length > 16) {
+                int ipStart = response.length - 4;
+                int b1 = response[ipStart] & 0xFF;
+                int b2 = response[ipStart + 1] & 0xFF;
+                int b3 = response[ipStart + 2] & 0xFF;
+                int b4 = response[ipStart + 3] & 0xFF;
+                // 简单校验
+                if (b1 > 0 && b1 < 255) {
+                    return b1 + "." + b2 + "." + b3 + "." + b4;
+                }
+            }
+        }
+        return null;
     }
 
     /**

@@ -3,6 +3,8 @@ com\bupt\dnsrelay\DNSRelayServer.class
 com\bupt\dnsrelay\dns\DNSMessage.class
 com\bupt\dnsrelay\dns\DNSQuestion.class
 com\bupt\dnsrelay\network\UDPServer.class
+com\bupt\dnsrelay\config\CacheManager$1.class
+com\bupt\dnsrelay\config\CacheManager.class
 com\bupt\dnsrelay\config\ConfigParser.class
 com\bupt\dnsrelay\dns\DNSRecord.class
 com\bupt\dnsrelay\dns\DNSParser.class
