@@ -5,3 +5,9 @@
 120.133.65.237 osfsr.lenovomm.com
 218.93.129.146 oth.eve.mdt.qq.com
 220.249.135.204 cdnfiles.52songshu.com
+23.56.29.55 ocsp.entrust.net
+106.39.192.142 ctldl.windowsupdate.com
+183.204.195.222 slardar-bd.feishu.cn
+52.183.220.149 settings-win.data.microsoft.com
+23.202.35.138 www.msftconnecttest.com
+23.55.179.16 ipv6.msftconnecttest.com
