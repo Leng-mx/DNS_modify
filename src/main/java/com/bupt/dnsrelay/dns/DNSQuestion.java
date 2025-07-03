@@ -69,6 +69,7 @@ public class DNSQuestion {
     public String getTypeString() {
         switch (type) {
             case DNSRecord.TYPE_A: return "A";
+            case DNSRecord.TYPE_AAAA: return "AAAA";
             case DNSRecord.TYPE_NS: return "NS";
             case DNSRecord.TYPE_CNAME: return "CNAME";
             case DNSRecord.TYPE_PTR: return "PTR";

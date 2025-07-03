@@ -1,7 +1,6 @@
 package com.bupt.dnsrelay;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import com.bupt.dnsrelay.config.CacheManager;
 import com.bupt.dnsrelay.config.ConfigParser;
@@ -9,6 +8,7 @@ import com.bupt.dnsrelay.dns.DNSMessage;
 import com.bupt.dnsrelay.dns.DNSParser;
 import com.bupt.dnsrelay.dns.DNSRecord;
 import com.bupt.dnsrelay.network.UDPServer;
+import com.bupt.dnsrelay.utils.DebugUtils;
 
 /**
  * DNS中继服务器主程序
@@ -37,10 +37,11 @@ public class DNSRelayServer {
         this.udpServer = new UDPServer(debugLevel);
         try {
             configParser.loadConfig(configFile);
+            DebugUtils.debug(debugLevel, "Configuration loaded successfully");
             if (debugLevel >= 1) configParser.printConfig();
             // 初始化CacheManager
             this.cacheManager = new CacheManager("config/cache.txt");
-            if (debugLevel >= 1) System.out.println("[CACHE] Loaded " + cacheManager.size() + " entries from cache.txt");
+            DebugUtils.debugf(debugLevel, "[CACHE] Loaded %d entries from cache.txt%n", cacheManager.size());
         } catch (IOException e) {
             System.err.println("Error loading configuration: " + e.getMessage());
             System.exit(1);
@@ -85,17 +86,18 @@ public class DNSRelayServer {
             try {
                 UDPServer.DNSPacket packet = udpServer.receiveQuery();
                 if (packet == null) continue;
-                if (debugLevel >= 1)
-                    System.out.printf("\n--- Received DNS Query from %s ---\n", packet.getClientInfo());
+                
+                DebugUtils.debugf(debugLevel, "\n--- Received DNS Query from %s ---\n", packet.getClientInfo());
+                
                 byte[] responseData = handleDNSQuery(packet.getData());
                 if (responseData != null) {
                     udpServer.sendResponse(responseData, packet.getClientAddress(), packet.getClientPort());
-                    if (debugLevel >= 1)
-                        System.out.printf("Response sent to client (%d bytes)\n", responseData.length);
+                    DebugUtils.debugf(debugLevel, "Response sent to client (%d bytes)\n", responseData.length);
                 } else {
                     System.err.println("Error: Failed to generate response");
                 }
-                if (debugLevel >= 1) System.out.println("----------------------------------------\n");
+                
+                DebugUtils.debug(debugLevel, "----------------------------------------\n");
             } catch (IOException e) {
                 if (isRunning) System.err.println("Error in server loop: " + e.getMessage());
             }
@@ -109,47 +111,46 @@ public class DNSRelayServer {
      */
     private byte[] handleDNSQuery(byte[] queryData) {
         try {
-            String domain = extractDomainFromQuery(queryData);
-            if (domain == null) {
-                System.err.println("Error: Failed to extract domain from query");
+            // 解析DNS查询消息（只解析一次）
+            DNSMessage queryMessage = DNSParser.parseMessage(queryData);
+            if (queryMessage.getQuestions().isEmpty()) {
+                System.err.println("Error: No questions in DNS query");
                 return null;
             }
-            int queryType = getQueryType(queryData);
-            if (debugLevel >= 1) {
-                System.out.println("Query domain: " + domain + ", type: " + (queryType == DNSRecord.TYPE_A ? "A" : (queryType == DNSRecord.TYPE_AAAA ? "AAAA" : queryType)));
-            }
-            if (debugLevel >= 2) {
-                try {
-                    DNSMessage msg = DNSParser.parseMessage(queryData);
-                    DNSParser.printMessage(msg, debugLevel);
-                } catch (Exception e) {
-                    System.err.println("Failed to parse and print DNS query: " + e.getMessage());
-                }
-            }
+            
+            String domain = queryMessage.getQuestions().get(0).getName().toLowerCase();
+            int queryType = queryMessage.getQuestions().get(0).getType();
+            
+            DebugUtils.printQueryInfo(debugLevel, domain, queryType);
+            DebugUtils.printDNSMessage(debugLevel, queryMessage);
+            
             // 1. 检查域名是否被拦截
             if (configParser.isDomainBlocked(domain)) {
                 System.out.printf("[BLOCKED] %s -> NXDOMAIN\n", domain);
-                return createErrorResponse(queryData, 3); // NXDOMAIN
+                return createErrorResponse(queryMessage, DNSMessage.RCODE_NXDOMAIN);
             }
+            
             // 2. 检查本地解析（仅A记录）
             if (queryType == DNSRecord.TYPE_A) {
                 String localIP = configParser.lookupDomain(domain);
                 if (localIP != null && !"0.0.0.0".equals(localIP)) {
                     System.out.printf("[LOCAL] %s -> %s\n", domain, localIP);
-                    return createLocalResponse(queryData, localIP);
+                    return createLocalResponse(queryMessage, localIP);
                 }
             }
+            
             // 3. 检查缓存
             String cacheIP = cacheManager.lookup(domain + ":" + queryType);
             if (cacheIP != null) {
                 System.out.printf("[CACHE] %s -> %s\n", domain, cacheIP);
                 if (queryType == DNSRecord.TYPE_A) {
-                    return createLocalResponse(queryData, cacheIP);
+                    return createLocalResponse(queryMessage, cacheIP);
                 } else if (queryType == DNSRecord.TYPE_AAAA) {
                     // 这里只返回原始响应，或可自定义IPv6响应
                     // 暂时直接转发上游响应
                 }
             }
+            
             // 4. 转发到上游DNS服务器
             System.out.printf("[UPSTREAM] %s -> querying upstream DNS\n", domain);
             byte[] upstreamResponse = udpServer.forwardQuery(queryData, upstreamDNS);
@@ -158,13 +159,11 @@ public class DNSRelayServer {
                 if (upstreamIP != null) {
                     cacheManager.put(domain + ":" + queryType, upstreamIP);
                     System.out.printf("[UPSTREAM] %s -> %s (cached)\n", domain, upstreamIP);
-                } else {
-                    System.out.printf("[UPSTREAM] %s -> response received, but no valid record found\n", domain);
-                }
+                } 
                 return upstreamResponse;
             } else {
                 System.out.printf("[UPSTREAM] %s -> query failed\n", domain);
-                return createErrorResponse(queryData, 2); // SERVFAIL
+                return createErrorResponse(queryMessage, DNSMessage.RCODE_SERVFAIL);
             }
         } catch (Exception e) {
             System.err.println("Error handling DNS query: " + e.getMessage());
@@ -173,165 +172,65 @@ public class DNSRelayServer {
     }
     
     /**
-     * 从DNS查询中提取域名
-     * @param queryData 查询数据
-     * @return 域名字符串
-     */
-    private String extractDomainFromQuery(byte[] queryData) {
-        if (queryData.length < 12) {
-            return null;
-        }
-        
-        try {
-            StringBuilder domain = new StringBuilder();
-            int pos = 12; // 跳过DNS头部
-            
-            while (pos < queryData.length) {
-                int len = queryData[pos] & 0xFF;
-                if (len == 0) break;
-                
-                if (len > 63) {
-                    // 可能是压缩指针，简化处理
-                    break;
-                }
-                
-                pos++;
-                if (pos + len > queryData.length) break;
-                
-                if (domain.length() > 0) {
-                    domain.append('.');
-                }
-                
-                for (int i = 0; i < len; i++) {
-                    domain.append((char) queryData[pos + i]);
-                }
-                pos += len;
-            }
-            
-            return domain.toString().toLowerCase();
-            
-        } catch (Exception e) {
-            return null;
-        }
-    }
-    
-    /**
-     * 创建错误响应（简化实现）
-     * @param queryData 原始查询数据
+     * 创建错误响应
+     * @param queryMessage 原始查询消息
      * @param rcode 错误码
      * @return 响应数据
      */
-    private byte[] createErrorResponse(byte[] queryData, int rcode) {
-        byte[] response = queryData.clone();
-        
-        // 设置QR位为1（响应）
-        response[2] |= 0x80;
-        
-        // 设置AA位为1（权威答案）
-        response[2] |= 0x04;
-        
-        // 设置RCODE
-        response[3] = (byte) ((response[3] & 0xF0) | (rcode & 0x0F));
-        
-        // 清空答案计数
-        response[6] = 0;
-        response[7] = 0;
-        response[8] = 0;
-        response[9] = 0;
-        response[10] = 0;
-        response[11] = 0;
-        
-        if (debugLevel >= 2) {
-            try {
-                DNSMessage msg = DNSParser.parseMessage(response);
-                DNSParser.printMessage(msg, debugLevel);
-            } catch (Exception e) {
-                System.err.println("Failed to parse and print error response: " + e.getMessage());
-            }
+    private byte[] createErrorResponse(DNSMessage queryMessage, int rcode) {
+        try {
+            DNSMessage response = DNSMessage.createErrorResponse(queryMessage, rcode);
+            byte[] responseData = DNSParser.buildMessage(response);
+            
+            DebugUtils.printDNSMessage(debugLevel, response);
+            
+            return responseData;
+        } catch (Exception e) {
+            System.err.println("Error creating error response: " + e.getMessage());
+            return null;
         }
-        
-        return response;
     }
     
     /**
-     * 创建本地解析响应（简化实现）
-     * @param queryData 原始查询数据
+     * 创建本地解析响应
+     * @param queryMessage 原始查询消息
      * @param ipAddress IP地址
      * @return 响应数据
      */
-    private byte[] createLocalResponse(byte[] queryData, String ipAddress) {
+    private byte[] createLocalResponse(DNSMessage queryMessage, String ipAddress) {
         try {
-            byte[] response = Arrays.copyOf(queryData, queryData.length + 16);
+            DNSMessage response = DNSMessage.createLocalResponse(queryMessage, ipAddress);
+            byte[] responseData = DNSParser.buildMessage(response);
             
-            // 设置QR位为1（响应）
-            response[2] |= 0x80;
+            DebugUtils.printDNSMessage(debugLevel, response);
             
-            // 设置AA位为1（权威答案）
-            response[2] |= 0x04;
-            
-            // 设置答案计数为1
-            response[7] = 1;
-            
-            // 添加答案记录（简化实现）
-            int pos = queryData.length;
-            
-            // 域名压缩指针指向问题部分
-            response[pos++] = (byte) 0xC0;
-            response[pos++] = (byte) 0x0C;
-            
-            // 类型：A记录
-            response[pos++] = 0;
-            response[pos++] = 1;
-            
-            // 类别：IN
-            response[pos++] = 0;
-            response[pos++] = 1;
-            
-            // TTL：300秒
-            response[pos++] = 0;
-            response[pos++] = 0;
-            response[pos++] = 1;
-            response[pos++] = 0x2C;
-            
-            // 数据长度：4字节
-            response[pos++] = 0;
-            response[pos++] = 4;
-            
-            // IP地址
-            String[] ipParts = ipAddress.split("\\.");
-            for (String part : ipParts) {
-                response[pos++] = (byte) Integer.parseInt(part);
-            }
-            
-
-            return Arrays.copyOf(response, pos);
-            
+            return responseData;
         } catch (Exception e) {
             System.err.println("Error creating local response: " + e.getMessage());
             return null;
         }
     }
 
-    // 新增：从DNS响应中提取A记录IP
+    /**
+     * 从DNS响应中提取IP地址
+     * @param response 响应数据
+     * @param queryType 查询类型
+     * @return IP地址字符串
+     */
     private String extractIPFromResponse(byte[] response, int queryType) {
         try {
             DNSMessage msg = DNSParser.parseMessage(response);
             if (msg.getAnswers() != null) {
                 for (DNSRecord rec : msg.getAnswers()) {
-                    if (queryType == DNSRecord.TYPE_A && rec.getType() == DNSRecord.TYPE_A && rec.getRdata() != null && rec.getRdata().length == 4) {
-                        byte[] rdata = rec.getRdata();
-                        int b1 = rdata[0] & 0xFF;
-                        int b2 = rdata[1] & 0xFF;
-                        int b3 = rdata[2] & 0xFF;
-                        int b4 = rdata[3] & 0xFF;
-                        return b1 + "." + b2 + "." + b3 + "." + b4;
-                    } else if (queryType == DNSRecord.TYPE_AAAA && rec.getType() == DNSRecord.TYPE_AAAA && rec.getRdata() != null && rec.getRdata().length == 16) {
+                    if (queryType == DNSRecord.TYPE_A && rec.getType() == DNSRecord.TYPE_A) {
+                        return rec.getIPAddress();
+                    } else if (queryType == DNSRecord.TYPE_AAAA && rec.getType() == DNSRecord.TYPE_AAAA) {
                         return rec.getIPv6Address();
                     }
                 }
             }
         } catch (Exception e) {
-            // 兼容A记录：直接从响应包末尾尝试提取IPv4
+            // 兼容处理：直接从响应包末尾尝试提取IPv4
             if (queryType == DNSRecord.TYPE_A && response.length > 16) {
                 int ipStart = response.length - 4;
                 int b1 = response[ipStart] & 0xFF;
@@ -344,13 +243,6 @@ public class DNSRelayServer {
             }
         }
         return null;
-    }
-
-    // 新增：从DNS查询包中提取查询类型
-    private int getQueryType(byte[] queryData) {
-        if (queryData.length < 14) return DNSRecord.TYPE_A;
-        int qtype = ((queryData[queryData.length - 4] & 0xFF) << 8) | (queryData[queryData.length - 3] & 0xFF);
-        return qtype;
     }
 
     /**
@@ -369,26 +261,6 @@ public class DNSRelayServer {
         System.out.println("  java " + programName);
         System.out.println("  java " + programName + " -d 10.3.9.44");
         System.out.println("  java " + programName + " -dd 8.8.8.8 config/dnsrelay.txt");
-    }
-
-    /**
-     * 验证IP地址格式
-     * @param ip IP地址字符串
-     * @return 是否有效
-     */
-    private static boolean isValidIP(String ip) {
-        String[] parts = ip.split("\\.");
-        if (parts.length != 4) return false;
-
-        try {
-            for (String part : parts) {
-                int num = Integer.parseInt(part);
-                if (num < 0 || num > 255) return false;
-            }
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 
     /**
@@ -426,7 +298,7 @@ public class DNSRelayServer {
 
         // 解析DNS服务器地址
         if (argIndex < args.length) {
-            if (isValidIP(args[argIndex])) {
+            if (ConfigParser.isValidIP(args[argIndex])) {
                 upstreamDNS = args[argIndex];
                 argIndex++;
             } else {

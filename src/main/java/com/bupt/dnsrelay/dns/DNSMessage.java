@@ -237,9 +237,4 @@ public class DNSMessage {
         sb.append("]");
         return sb.toString();
     }
-
-    public DNSMessage getHeader() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getHeader'");
-    }
 }

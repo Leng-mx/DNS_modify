@@ -123,7 +123,7 @@ public class ConfigParser {
      * @param ip IP地址字符串
      * @return 是否有效
      */
-    private boolean isValidIP(String ip) {
+    public static boolean isValidIP(String ip) {
         return IP_PATTERN.matcher(ip).matches();
     }
     

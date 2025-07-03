@@ -3,6 +3,7 @@ F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\config\ConfigParser.java
 F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\dns\DNSQuestion.java
 F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\DNSRelayServer.java
 F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\config\CacheManager.java
+F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\utils\DebugUtils.java
 F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\dns\DNSParser.java
 F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\dns\DNSRecord.java
 F:\Desk top\DNS_modify\src\main\java\com\bupt\dnsrelay\dns\DNSMessage.java

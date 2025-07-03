@@ -7,6 +7,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 
+import com.bupt.dnsrelay.utils.DebugUtils;
+
 /**
  * UDP服务器类
  * 负责DNS查询的接收和响应发送
@@ -45,10 +47,8 @@ public class UDPServer {
             isRunning = true;
             
             System.out.println("DNS Relay Server listening on port " + DNS_PORT);
-            if (debugLevel >= 1) {
-                System.out.println("Debug level: " + debugLevel);
-                System.out.println("Socket timeout: " + SOCKET_TIMEOUT + "ms");
-            }
+            DebugUtils.debugf(debugLevel, "Debug level: %d%n", debugLevel);
+            DebugUtils.debugf(debugLevel, "Socket timeout: %dms%n", SOCKET_TIMEOUT);
             
         } catch (BindException e) {
             throw new IOException("Failed to bind to port " + DNS_PORT + 
@@ -83,12 +83,8 @@ public class UDPServer {
         try {
             serverSocket.receive(packet);
             
-            if (debugLevel >= 2) {
-                System.out.printf("Received %d bytes from %s:%d%n",
-                    packet.getLength(),
-                    packet.getAddress().getHostAddress(),
-                    packet.getPort());
-            }
+            DebugUtils.printPacketInfo(debugLevel, "Received", packet.getLength(), 
+                packet.getAddress().getHostAddress(), packet.getPort());
             
             // 创建DNS数据包对象
             byte[] data = new byte[packet.getLength()];
@@ -120,12 +116,8 @@ public class UDPServer {
         
         serverSocket.send(responsePacket);
         
-        if (debugLevel >= 2) {
-            System.out.printf("Sent %d bytes to %s:%d%n",
-                responseData.length,
-                clientAddress.getHostAddress(),
-                clientPort);
-        }
+        DebugUtils.printPacketInfo(debugLevel, "Sent", responseData.length, 
+            clientAddress.getHostAddress(), clientPort);
     }
     
     /**
@@ -145,9 +137,7 @@ public class UDPServer {
             // 解析上游服务器地址
             InetAddress serverAddress = InetAddress.getByName(upstreamServer);
             
-            if (debugLevel >= 1) {
-                System.out.println("Forwarding query to upstream DNS: " + upstreamServer);
-            }
+            DebugUtils.debugf(debugLevel, "Forwarding query to upstream DNS: %s%n", upstreamServer);
             
             // 发送查询到上游服务器
             DatagramPacket queryPacket = new DatagramPacket(
@@ -160,10 +150,8 @@ public class UDPServer {
                 responseBuffer, responseBuffer.length);
             clientSocket.receive(responsePacket);
             
-            if (debugLevel >= 1) {
-                System.out.printf("Received response from upstream DNS (%d bytes)%n",
-                    responsePacket.getLength());
-            }
+            DebugUtils.debugf(debugLevel, "Received response from upstream DNS (%d bytes)%n", 
+                responsePacket.getLength());
             
             // 返回响应数据
             byte[] responseData = new byte[responsePacket.getLength()];

@@ -1,3 +1,4 @@
+com\bupt\dnsrelay\utils\DebugUtils.class
 com\bupt\dnsrelay\network\UDPServer$DNSPacket.class
 com\bupt\dnsrelay\DNSRelayServer.class
 com\bupt\dnsrelay\dns\DNSMessage.class

@@ -17,26 +17,24 @@
 DNS_modify/
 ├── src/                           # 源代码目录
 │   ├── main/
-│   │   ├── java/com/bupt/dnsrelay/  # Java源代码包
-│   │   │   ├── DNSRelayServer.java    # 主程序类
-│   │   │   ├── dns/                   # DNS处理包
-│   │   │   │   ├── DNSMessage.java    # DNS报文类
-│   │   │   │   ├── DNSParser.java     # DNS解析器
-│   │   │   │   └── DNSRecord.java     # DNS记录类
-│   │   │   ├── config/                # 配置处理包
-│   │   │   │   └── ConfigParser.java  # 配置解析器
-│   │   │   └── network/               # 网络通信包
-│   │   │       └── UDPServer.java     # UDP服务器
-│   │   └── resources/                 # 资源文件目录
-│   │       └── dnsrelay.txt          # 默认配置文件
-│   └── test/java/                    # 测试代码目录
-├── config/                           # 配置文件目录
-│   └── dnsrelay.txt                 # DNS映射配置文件
-├── docs/                            # 文档目录
-│   ├── 设计文档.md                   # 详细设计文档
-│   └── 测试报告.md                   # 测试结果报告
-├── pom.xml                          # Maven配置文件
-└── README.md                        # 项目说明文件
+│   │   └── java/com/bupt/dnsrelay/  # Java源代码包
+│   │       ├── DNSRelayServer.java    # 主程序类
+│   │       ├── dns/                   # DNS处理包
+│   │       │   ├── DNSMessage.java    # DNS报文类
+│   │       │   ├── DNSParser.java     # DNS解析器
+│   │       │   ├── DNSQuestion.java   # DNS问题类
+│   │       │   └── DNSRecord.java     # DNS记录类
+│   │       ├── config/                # 配置处理包
+│   │       │   ├── CacheManager.java  # 缓存管理器
+│   │       │   └── ConfigParser.java  # 配置解析器
+│   │       └── network/               # 网络通信包
+│   │           └── UDPServer.java     # UDP服务器
+│   └── test/
+│       └── java/                    # 测试代码目录
+├── config/                         # 配置文件目录
+│   └── dnsrelay.txt               # DNS映射配置文件
+├── pom.xml                        # Maven配置文件
+└── README.md                      # 项目说明文件
 ```
 
 ## 编译和运行
