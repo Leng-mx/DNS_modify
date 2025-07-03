@@ -1,4 +1,5 @@
-36.110.220.113 kflow-idle.wpscdn.cn:1
 10.3.19.2 www.bupt.edu.cn:1
-220.181.111.232 www.baidu.com:1
-111.31.112.78 cdnfiles.52songshu.com:1
+47.76.62.167 www.souhu.com:1
+111.31.112.79 cdnfiles.52songshu.com:1
+120.133.65.240 osfsr.lenovomm.com:1
+125.88.199.164 vweixinf.tc.qq.com:1

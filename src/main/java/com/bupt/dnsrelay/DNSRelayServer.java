@@ -1,6 +1,9 @@
 package com.bupt.dnsrelay;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.bupt.dnsrelay.config.CacheManager;
 import com.bupt.dnsrelay.config.ConfigParser;
@@ -11,12 +14,13 @@ import com.bupt.dnsrelay.network.UDPServer;
 import com.bupt.dnsrelay.utils.DebugUtils;
 
 /**
- * DNS中继服务器主程序
+ * DNS中继服务器主程序 - 支持并行处理
  */
 public class DNSRelayServer {
     
     private static final String DEFAULT_UPSTREAM_DNS = "10.3.9.4";
     private static final String DEFAULT_CONFIG_FILE = "config\\dnsrelay.txt";
+    private static final int DEFAULT_THREAD_POOL_SIZE = 10; // 默认线程池大小
     
     private ConfigParser configParser = new ConfigParser();
     private UDPServer udpServer;
@@ -24,6 +28,7 @@ public class DNSRelayServer {
     private int debugLevel;
     private volatile boolean isRunning = false;
     private CacheManager cacheManager;
+    private ExecutorService requestExecutor; // 处理DNS请求的线程池
     
     /**
      * 构造函数
@@ -35,6 +40,9 @@ public class DNSRelayServer {
         this.upstreamDNS = upstreamDNS;
         this.debugLevel = debugLevel;
         this.udpServer = new UDPServer(debugLevel);
+        // 初始化线程池
+        this.requestExecutor = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
+        
         try {
             configParser.loadConfig(configFile);
             DebugUtils.debug(debugLevel, "Configuration loaded successfully");
@@ -55,10 +63,13 @@ public class DNSRelayServer {
         try {
             udpServer.start();
             isRunning = true;
-            System.out.println("DNS Relay Server started successfully\nDebug level: " + debugLevel +
-                "\nUpstream DNS: " + upstreamDNS +
-                "\nConfiguration entries: " + configParser.getEntryCount() +
-                "\nWaiting for DNS queries...\n");
+            System.out.println("DNS Relay Server started successfully (Parallel Processing Enabled)");
+            System.out.println("Debug level: " + debugLevel);
+            System.out.println("Upstream DNS: " + upstreamDNS);
+            System.out.println("Configuration entries: " + configParser.getEntryCount());
+            System.out.println("Thread pool size: " + DEFAULT_THREAD_POOL_SIZE);
+            System.out.println("Waiting for DNS queries...\n");
+            
             Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
             runServerLoop();
         } catch (IOException e) {
@@ -72,34 +83,68 @@ public class DNSRelayServer {
      */
     public void stop() {
         if (isRunning) {
-            udpServer.stop();
+            System.out.println("Stopping DNS Relay Server...");
             isRunning = false;
+            udpServer.stop();
+            
+            // 关闭线程池
+            requestExecutor.shutdown();
+            try {
+                if (!requestExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    System.out.println("Forcing shutdown of thread pool...");
+                    requestExecutor.shutdownNow();
+                    if (!requestExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                        System.err.println("Thread pool did not terminate");
+                    }
+                }
+            } catch (InterruptedException e) {
+                requestExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            
             System.out.println("DNS Relay Server stopped");
         }
     }
     
     /**
-     * 主服务循环
+     * 主服务循环 - 并行处理版本
      */
     private void runServerLoop() {
+        System.out.println("Server loop started with parallel processing");
+        
         while (isRunning) {
             try {
                 UDPServer.DNSPacket packet = udpServer.receiveQuery();
                 if (packet == null) continue;
                 
-                DebugUtils.debugf(debugLevel, "\n--- Received DNS Query from %s ---\n", packet.getClientInfo());
+                // 使用线程池异步处理每个DNS请求
+                requestExecutor.submit(() -> {
+                    try {
+                        DebugUtils.debugf(debugLevel, "\n--- Processing DNS Query from %s (Thread: %s) ---\n", 
+                            packet.getClientInfo(), Thread.currentThread().getName());
+                        
+                        byte[] responseData = handleDNSQuery(packet.getData());
+                        if (responseData != null) {
+                            udpServer.sendResponse(responseData, packet.getClientAddress(), packet.getClientPort());
+                            DebugUtils.debugf(debugLevel, "Response sent to client (%d bytes) (Thread: %s)\n", 
+                                responseData.length, Thread.currentThread().getName());
+                        } else {
+                            System.err.println("Error: Failed to generate response for " + packet.getClientInfo());
+                        }
+                        
+                        DebugUtils.debug(debugLevel, "----------------------------------------\n");
+                    } catch (IOException e) {
+                        System.err.println("Error processing DNS query from " + packet.getClientInfo() + ": " + e.getMessage());
+                    } catch (Exception e) {
+                        System.err.println("Unexpected error processing DNS query: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                });
                 
-                byte[] responseData = handleDNSQuery(packet.getData());
-                if (responseData != null) {
-                    udpServer.sendResponse(responseData, packet.getClientAddress(), packet.getClientPort());
-                    DebugUtils.debugf(debugLevel, "Response sent to client (%d bytes)\n", responseData.length);
-                } else {
-                    System.err.println("Error: Failed to generate response");
-                }
-                
-                DebugUtils.debug(debugLevel, "----------------------------------------\n");
             } catch (IOException e) {
-                if (isRunning) System.err.println("Error in server loop: " + e.getMessage());
+                if (isRunning) {
+                    System.err.println("Error in server loop: " + e.getMessage());
+                }
             }
         }
     }
@@ -130,7 +175,7 @@ public class DNSRelayServer {
                 return createErrorResponse(queryMessage, DNSMessage.RCODE_NXDOMAIN);
             }
             
-            // 2. 检查本地解析（仅A记录）
+            // 2. 检查本地解析
             if (queryType == DNSRecord.TYPE_A) {
                 String localIP = configParser.lookupDomain(domain);
                 if (localIP != null && !"0.0.0.0".equals(localIP)) {
@@ -146,8 +191,7 @@ public class DNSRelayServer {
                 if (queryType == DNSRecord.TYPE_A) {
                     return createLocalResponse(queryMessage, cacheIP);
                 } else if (queryType == DNSRecord.TYPE_AAAA) {
-                    // 这里只返回原始响应，或可自定义IPv6响应
-                    // 暂时直接转发上游响应
+                    return createLocalResponse(queryMessage, cacheIP);
                 }
             }
             
