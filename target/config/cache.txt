@@ -1,5 +1,5 @@
-10.3.19.2 www.bupt.edu.cn:1
-47.76.62.167 www.souhu.com:1
-111.31.112.79 cdnfiles.52songshu.com:1
-120.133.65.240 osfsr.lenovomm.com:1
-125.88.199.164 vweixinf.tc.qq.com:1
+40.126.35.20 login.live.com:1
+20.190.144.162 login.microsoftonline.com:1
+20.190.144.172 graph.microsoft.com:1
+40.74.78.229 fd.api.iris.microsoft.com:1
+39.105.105.167 pc-store-lb.lenovomm.cn:1
